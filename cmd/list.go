@@ -25,7 +25,7 @@ var listCmd = &cobra.Command{
 
 func list(cmd *cobra.Command, args []string) error {
 	var snippets snippet.Snippets
-	if err := snippets.Load(); err != nil {
+	if err := snippets.Load(true); err != nil {
 		return err
 	}
 
@@ -43,6 +43,10 @@ func list(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(color.Output, "%s : %s\n",
 				color.HiGreenString(description), color.HiYellowString(command))
 		} else {
+			if config.Flag.Debug {
+				fmt.Fprintf(color.Output, "%12s %s\n",
+					color.RedString("   Filename:"), snippet.Filename)
+			}
 			fmt.Fprintf(color.Output, "%12s %s\n",
 				color.HiGreenString("Description:"), snippet.Description)
 			if strings.Contains(snippet.Command, "\n") {
