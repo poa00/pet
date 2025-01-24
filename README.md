@@ -1,36 +1,30 @@
-# pet : CLI Snippet Manager
+# Pet - CLI Snippet Manager
 
 [![GitHub release](https://img.shields.io/github/release/knqyf263/pet.svg)](https://github.com/knqyf263/pet/releases/latest)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/knqyf263/pet/blob/master/LICENSE)
 
-<img src="doc/logo.png" width="150">
+<div align="center">
+<img src="doc/logo.png" width="350">
+</div>
 
-Simple command-line snippet manager, written in Go
+
+# Motivation
+
+`pet` is a simple command-line snippet manager (inspired by [memo](https://github.com/mattn/memo)).
+
+I have a hard time remembering complex command or ones that I rarely use. Moreover, it is difficult to find them in shell history.
+
+It's time to let go of the expectation of remembering every command, and focus on productivity and finding the right commands as fast as possible. It's fun when you're 2 years in and work with 2 tools, but less so when you're a decade in and work across backend/frontend/infrastructure with tons of tools. You most probably relate to this if you're a developer.
+
+`pet` is a simple tool that allows you to save, tag, search, and execute command-line snippets easily! It's now nearly 8 years old and is used by many developers around the world.
+
+`pet` is written in Go, and therefore you can just grab the binary releases and drop it in your $PATH.
 
 <img src="doc/pet01.gif" width="700">
 
 You can use variables (`<param>` or `<param=default_value>` ) in snippets.
 
 <img src="doc/pet08.gif" width="700">
-
-
-# Abstract
-
-`pet` is written in Go, and therefore you can just grab the binary releases and drop it in your $PATH.
-
-`pet` is a simple command-line snippet manager (inspired by [memo](https://github.com/mattn/memo)).
-I always forget commands that I rarely use. Moreover, it is difficult to search them from shell history. There are many similar commands, but they are all different.
-
-e.g. 
-- `awk -F, 'NR <=2 {print $0}; NR >= 5 && NR <= 10 {print $0}' company.csv` (What I am looking for)
-- `awk -F, '$0 !~ "DNS|Protocol" {print $0}' packet.csv`
-- `awk -F, '{print $0} {if((NR-1) % 5 == 0) {print "----------"}}' test.csv`
-
-In the above case, I search by `awk` from shell history, but many commands hit.
-
-Even if I register an alias, I forget the name of alias (because I rarely use that command).
-
-So I made it possible to register snippets with description and search them easily.
 
 # TOC
 
@@ -72,10 +66,29 @@ So I made it possible to register snippets with description and search them easi
 
 - Register your command snippets easily.
 - Use variables (with one or several default values) in snippets.
-- Search snippets interactively.
+- Search snippets interactively
 - Run snippets directly.
 - Edit snippets easily (config is just a TOML file).
 - Sync snippets via Gist or GitLab Snippets automatically.
+
+# Creating a snippet
+
+You can create a snippet by running `pet new`.
+
+```
+$ pet new
+Command> echo Hello world!
+Description> print Hello world
+```
+
+To see all available arguments, run `pet new --help`.
+
+Multiline commands can be entered by using the multiline argument `pet new --multiline`
+
+You can use also use variables in snippets, these are called parameters. More information on that in the next section.
+
+You can also *tag* snippets to search for them faster. More information on that in the tag section.
+
 
 # Parameters
 There are `<n_ways>` ways of entering parameters.
@@ -130,6 +143,8 @@ By adding the following config to `.bashrc`, you can search snippets and output 
 This will also allow you to execute the commands yourself, which will add them to your shell history! This is basically the only way we can manipulate shell history.
 This also allows you to *chain* commands! [Example here](https://github.com/knqyf263/pet/discussions/266)
 
+You can also customize the search and list commands with options, example `-t` or `--tags`, for example to only search the subset of snippets tagged with myjob `pet search -t myjob`.
+
 ```
 cat .bashrc
 function pet-select() {
@@ -166,6 +181,24 @@ By using `pbcopy` on OS X, you can copy snippets to clipboard.
 
 <img src="doc/pet06.gif" width="700">
 
+## Allow to register from history when using fzf
+
+Just export this to your `.bashrc` or `.zshrc` file. This will show your history
+as default (when using fzf) and it also binds the `alt+s` key combination
+to allow you to search and save some previous used command command.
+
+```
+export FZF_CTRL_R_OPTS="
+  --reverse
+  --cycle
+  --info=right
+  --color header:italic
+  --header 'alt+s (pet new)'
+  --preview 'echo {}' --preview-window down:3:hidden:wrap 
+  --bind '?:toggle-preview'
+  --bind 'alt-s:execute(pet new --tag {2..})+abort'"
+```
+
 # Features
 
 ## Edit snippets
@@ -182,12 +215,11 @@ You can share snippets via Gist.
 # Usage
 
 ```
-pet - Simple command-line snippet manager.
-
 Usage:
   pet [command]
 
 Available Commands:
+  clip        Copy the selected commands
   configure   Edit config file
   edit        Edit snippet file
   exec        Run the selected commands
@@ -201,6 +233,7 @@ Available Commands:
 Flags:
       --config string   config file (default is $HOME/.config/pet/config.toml)
       --debug           debug mode
+  -h, --help            help for pet
 
 Use "pet [command] --help" for more information about a command.
 ```
@@ -262,11 +295,12 @@ Run `pet configure`
 
 ## Multi directory and multi file setup
 
-Directories musst be specified as an array.
+Directories must be specified as an array.
 All `toml` files will be scraped and found snippets will be added.
 
 Example1: single directory
 
+```toml
 [GHEGist]
   base_url = ""                   # GHE base URL
   upload_url = ""                 # GHE upload URL (often the same as the base URL)
@@ -275,6 +309,7 @@ Example1: single directory
   gist_id = ""                    # Gist ID
   public = false                  # public or priate
   auto_sync = false               # sync automatically when editing snippets
+```
 
 ```
 $ pet configure
@@ -293,7 +328,7 @@ $ pet configure
   snippetdirs = ["/path/to/some/snippets/", "/more/snippets/"]
 ...
 ```
- If `snippetfile` setting is omitted, new snippets will be added in a seperate file to the first directory. The generated filename is time based.
+ If `snippetfile` setting is omitted, new snippets will be added in a separate file to the first directory. The generated filename is time based.
 
 Snippet files in `snippetdirs` will not be added to Gist or GitLab. You've to do version control manually.
 
@@ -450,10 +485,15 @@ Upload success
 You need to install selector command ([fzf](https://github.com/junegunn/fzf) or [peco](https://github.com/peco/peco)).  
 `homebrew` install `fzf` automatically.
 
+After you install Pet, it's HIGHLY recommended to install the shortcuts mentioned in the section on [ZSH Prev](#zsh-prev-function)
+
+
 ## Binary
 Go to [the releases page](https://github.com/knqyf263/pet/releases), find the version you want, and download the zip file. Unpack the zip file, and put the binary to somewhere you want (on UNIX-y systems, /usr/local/bin or the like). Make sure it has execution bits turned on. 
 
 ## Mac OS X / Homebrew
+
+Install [selector command](#Installation) first.
 You can use homebrew on OS X.
 ```
 brew install knqyf263/pet/pet
@@ -468,9 +508,10 @@ brew install knqyf263/pet/pet
 ```
 
 ## Fedora, RedHat, CentOS
+Install [selector command](#Installation) first.
 Download rpm package from [the releases page](https://github.com/knqyf263/pet/releases)
 ```
-sudo rpm -ivh https://github.com/knqyf263/pet/releases/download/v0.3.0/pet_0.3.0_linux_amd64.rpm
+sudo rpm -ivh https://github.com/knqyf263/pet/releases/download/vx.x.x/pet_x.x.x_linux_amd64.rpm
 ```
 Also available on the [Terra repository](https://terra.fyralabs.com/) (3rd party) for Fedora/Fedora-based distros
 ```
@@ -478,13 +519,15 @@ sudo dnf install pet
 ```
 
 ## Debian, Ubuntu
+Install [selector command](#Installation) first.
 Download deb package from [the releases page](https://github.com/knqyf263/pet/releases)
 ```
-wget https://github.com/knqyf263/pet/releases/download/v0.3.6/pet_0.3.6_linux_amd64.deb
-dpkg -i pet_0.3.6_linux_amd64.deb
+wget https://github.com/knqyf263/pet/releases/download/vx.x.x/pet_x.x.x_linux_amd64.deb
+dpkg -i pet_x.x.x_linux_amd64.deb
 ```
 
 ## Archlinux
+Install [selector command](#Installation) first.
 Two packages are available in [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository).
 You can install the package [from source](https://aur.archlinux.org/packages/pet-git):
 ```
@@ -496,6 +539,7 @@ yaourt -S pet-bin
 ```
 
 ## Build
+Install [selector command](#Installation) first.
 
 ```
 mkdir -p $GOPATH/src/github.com/knqyf263

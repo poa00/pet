@@ -1,3 +1,4 @@
+version: 2
 release:
   github:
     owner: knqyf263
@@ -5,7 +6,8 @@ release:
   name_template: '{{.Tag}}'
 brews:
   -
-    tap:
+    name: pet
+    repository:
       owner: knqyf263
       name: homebrew-pet
     commit_author:
